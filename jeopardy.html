@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeopardy!</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #060CE9;
+    --dark-blue: #03078a;
+    --gold: #FFD700;
+    --gold-dark: #c9a800;
+    --white: #FFFFFF;
+    --black: #000000;
+    --red: #e91c06;
+    --green: #06c94b;
+    --team1: #FF6B35;
+    --team2: #7B2FBE;
+    --team3: #00B4D8;
+    --team4: #06D6A0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #020b2e;
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(6,12,233,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(255,215,0,0.05) 0%, transparent 50%);
+  }
+
+  /* ===== HEADER ===== */
+  #header {
+    text-align: center;
+    padding: 18px 20px 10px;
+    position: relative;
+  }
+
+  #header h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    color: var(--gold);
+    letter-spacing: 8px;
+    text-shadow:
+      0 0 20px rgba(255,215,0,0.6),
+      4px 4px 0 #a07800,
+      8px 8px 0 #604800;
+    line-height: 1;
+  }
+
+  #header p {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ===== SCOREBOARD ===== */
+  #scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 20px;
+    flex-wrap: wrap;
+  }
+
+  .team-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 10px 20px;
+    text-align: center;
+    min-width: 130px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .team-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .team-card.t1::before { background: var(--team1); }
+  .team-card.t2::before { background: var(--team2); }
+  .team-card.t3::before { background: var(--team3); }
+  .team-card.t4::before { background: var(--team4); }
+
+  .team-card.leading {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  }
+
+  .team-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .team-card.t1 .team-name { color: var(--team1); }
+  .team-card.t2 .team-name { color: var(--team2); }
+  .team-card.t3 .team-name { color: var(--team3); }
+  .team-card.t4 .team-name { color: var(--team4); }
+
+  .team-score {
+    font-family: 'Anton', sans-serif;
+    font-size: 2rem;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  /* ===== BOARD ===== */
+  #board-container {
+    padding: 0 16px 20px;
+    overflow-x: auto;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    min-width: 700px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .category-header {
+    background: linear-gradient(180deg, var(--blue), var(--dark-blue));
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 14px 8px;
+    border: 2px solid rgba(255,215,0,0.3);
+    border-radius: 6px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+  }
+
+  .cell {
+    background: linear-gradient(180deg, #0a14d4, #060CE9, #0a14d4);
+    border: 2px solid rgba(255,215,0,0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .cell:hover:not(.used) {
+    transform: scale(1.03);
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(6,12,233,0.4);
+    z-index: 2;
+  }
+
+  .cell:hover:not(.used)::after { opacity: 1; }
+
+  .cell.used {
+    background: rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.05);
+    cursor: default;
+  }
+
+  .cell-value {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+    color: var(--gold);
+    text-shadow: 0 0 10px rgba(255,215,0,0.5), 2px 2px 0 rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+  }
+
+  .cell.used .cell-value { opacity: 0; }
+
+  /* ===== MODAL ===== */
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  #modal-overlay.active { display: flex; }
+
+  #modal {
+    background: linear-gradient(145deg, #070f9e, #060CE9, #070f9e);
+    border: 3px solid var(--gold);
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow:
+      0 0 60px rgba(255,215,0,0.3),
+      0 0 120px rgba(6,12,233,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.7) translateY(40px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  #modal-category {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  #modal-points {
+    font-family: 'Anton', sans-serif;
+    font-size: 2.5rem;
+    color: var(--gold);
+    text-align: center;
+    text-shadow: 0 0 20px rgba(255,215,0,0.6);
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  #modal-question {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    color: var(--white);
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* Timer */
+  #timer-ring {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  #timer-svg {
+    transform: rotate(-90deg);
+  }
+
+  #timer-bg { fill: none; stroke: rgba(255,255,255,0.1); }
+  #timer-fg {
+    fill: none;
+    stroke: var(--gold);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s;
+  }
+
+  #timer-text {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.6rem;
+    fill: var(--white);
+    text-anchor: middle;
+    dominant-baseline: central;
+    transform: rotate(90deg);
+    transform-origin: 45px 45px;
+  }
+
+  /* Answer reveal */
+  #answer-reveal {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,215,0,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  #answer-reveal.visible { display: block; animation: slideDown 0.4s ease; }
+
+  @keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  #answer-label {
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  #answer-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--white);
+    letter-spacing: 2px;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.15); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #000;
+  }
+
+  .btn-red {
+    background: linear-gradient(135deg, #e93a06, #b02a00);
+    color: #fff;
+  }
+
+  .btn-close {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .btn-close:hover { color: var(--white); }
+
+  /* Award section */
+  #award-section {
+    border-top: 1px solid rgba(255,215,0,0.2);
+    padding-top: 16px;
+    display: none;
+  }
+
+  #award-section.visible { display: block; animation: slideDown 0.3s ease; }
+
+  #award-label {
+    text-align: center;
+    color: var(--gold);
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+
+  #award-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .award-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 1.5px;
+    padding: 9px 18px;
+    border: 2px solid;
+    border-radius: 8px;
+    cursor: pointer;
+    background: rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+  }
+
+  .award-btn:hover { transform: translateY(-2px); }
+
+  .award-btn.t1 { color: var(--team1); border-color: var(--team1); }
+  .award-btn.t1:hover { background: var(--team1); color: #000; }
+  .award-btn.t2 { color: var(--team2); border-color: var(--team2); }
+  .award-btn.t2:hover { background: var(--team2); color: #fff; }
+  .award-btn.t3 { color: var(--team3); border-color: var(--team3); }
+  .award-btn.t3:hover { background: var(--team3); color: #000; }
+  .award-btn.t4 { color: var(--team4); border-color: var(--team4); }
+  .award-btn.t4:hover { background: var(--team4); color: #000; }
+
+  /* ===== WIN SCREEN ===== */
+  #win-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  #win-screen.active { display: flex; }
+
+  #win-trophy { font-size: 5rem; margin-bottom: 10px; animation: bounce 1s infinite alternate; }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-15px); }
+  }
+
+  #win-title {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(2rem, 8vw, 5rem);
+    color: var(--gold);
+    letter-spacing: 6px;
+    text-shadow: 0 0 40px rgba(255,215,0,0.8);
+    margin-bottom: 8px;
+  }
+
+  #win-team {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: var(--white);
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+  }
+
+  #win-scores {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+
+  .win-score-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 24px;
+    min-width: 110px;
+  }
+
+  .win-score-card.winner { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+
+  .win-score-card .t-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  .win-score-card .t-pts {
+    font-family: 'Anton', sans-serif;
+    font-size: 2rem;
+    color: var(--white);
+  }
+
+  #btn-restart {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    padding: 14px 40px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #btn-restart:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+  /* Confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 199;
+  }
+
+  /* Progress bar */
+  #progress-bar-wrap {
+    text-align: center;
+    padding: 0 16px 10px;
+  }
+
+  #progress-info {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  #progress-track {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    height: 4px;
+    max-width: 400px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>JEOPARDY!</h1>
+  <p>The Classic Quiz Game</p>
+</div>
+
+<div id="scoreboard"></div>
+
+<div id="progress-bar-wrap">
+  <div id="progress-info">0 / 60 QUESTIONS ANSWERED</div>
+  <div id="progress-track"><div id="progress-fill" style="width:0%"></div></div>
+</div>
+
+<div id="board-container">
+  <div id="board"></div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <button class="btn-close" onclick="closeModal()">✕</button>
+    <div id="modal-category"></div>
+    <div id="modal-points"></div>
+    <div id="modal-question"></div>
+
+    <div id="timer-ring">
+      <svg id="timer-svg" width="90" height="90" viewBox="0 0 90 90">
+        <circle class="timer-bg" cx="45" cy="45" r="38" stroke-width="6"/>
+        <circle id="timer-fg" cx="45" cy="45" r="38" stroke-width="6"
+          stroke-dasharray="238.76" stroke-dashoffset="0"/>
+        <text id="timer-text" x="45" y="45">30</text>
+      </svg>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" id="btn-show-answer" onclick="revealAnswer()">Show Answer</button>
+    </div>
+
+    <div id="answer-reveal">
+      <div id="answer-label">Answer</div>
+      <div id="answer-text"></div>
+    </div>
+
+    <div id="award-section">
+      <div id="award-label">Award Points To:</div>
+      <div id="award-buttons"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Win Screen -->
+<canvas id="confetti-canvas"></canvas>
+<div id="win-screen">
+  <div id="win-trophy">🏆</div>
+  <div id="win-title">WINNER!</div>
+  <div id="win-team"></div>
+  <div id="win-scores"></div>
+  <button id="btn-restart" onclick="restartGame()">PLAY AGAIN</button>
+</div>
+
+<script>
+// ============================================================
+//  GAME DATA — Edit categories, questions, and answers here!
+// ============================================================
+const GAME_DATA = [
+  {
+    category: "GEOGRAPHY",
+    questions: [
+      { q: "This is the largest country in the world by area.", a: "Russia", points: 100 },
+      { q: "Lake Baikal, the world's deepest lake, is located in this country.", a: "Russia", points: 200 },
+      { q: "This African country has the most pyramids in the world.", a: "Sudan", points: 300 },
+      { q: "The Mariana Trench, the deepest point on Earth, is in this ocean.", a: "Pacific Ocean", points: 400 },
+      { q: "This tiny nation-state is the world's smallest country by both area and population.", a: "Vatican City", points: 500 },
+      { q: "This South American country has the longest coastline on the Pacific Ocean and is shaped like a long, narrow ribbon.", a: "Chile", points: 600 },
+      { q: "This is the largest desert in the world.", a: "Antarctica", points: 700 },
+      { q: "This country has the most natural lakes in the world.", a: "Canada", points: 800 },
+      { q: "This is the only country in the world to have a flag that is not a quadrilateral.", a: "Nepal", points: 900 },
+      { q: "This African country is the most populous on the continent and has the largest economy.", a: "Nigeria", points: 1000 },
+    ]
+  },
+  {
+    category: "SCIENCE",
+    questions: [
+      { q: "This gas makes up about 78% of Earth's atmosphere.", a: "Nitrogen", points: 100 },
+      { q: "This type of energy is possessed by an object due to its motion.", a: "Kinetic Energy", points: 200 },
+      { q: "A strong chemical link formed when two atoms, typically non-metals, share one or more pairs of valence electrons to achieve stability, resulting in a lower overall energy state.", a: "Covalent bond", points: 300 },
+      { q: "This scale is used to specify the acidity or basicity of an aqueous solution, ranging from 0 to 14.", a: "pH scale", points: 400 },
+      { q: "This law states that the total entropy of an isolated system can never decrease over time.", a: "Second Law of Thermodynamics", points: 500 },
+      { q: "This constant, approximately equal to 6.626 times 10^{-34} joule-seconds, relates the energy of a photon to its frequency.", a: "Planck's constant", points: 600 },
+      { q: "In the periodic table, these are the elements in Group 18 that are generally unreactive and odorless.", a: "Noble Gases", points: 700 },
+      { q: "This phenomenon occurs when a wave changes direction as it passes from one medium to another (e.g., light passing from air into water).", a: "Refraction", points: 800 },
+      { q: "This is the term for a chemical reaction that releases energy in the form of heat or light.", a: "Exothermic reaction", points: 900 },
+      { q: "This principle of fluid mechanics states that an upward buoyant force exerted on a body immersed in a fluid is equal to the weight of the fluid that the body displaces.", a: "Archimedes' Principle", points: 1000 },
+    ]
+  },
+  {
+    category: "HISTORY",
+    questions: [
+      { q: "World War II ended in this year.", a: "1945", points: 100 },
+      { q: "This treaty ended World War I.", a: "Treaty of Versailles", points: 200 },
+      { q: "This Mongolian leader founded the largest contiguous empire in history after unifying the nomadic tribes of Northeast Asia.", a: "Genghis Khan", points: 300 },
+      { q: "This 1773 protest in the American colonies saw a group of men destroy an entire shipment of tea from the East India Company.", a: "The Boston Tea Party", points: 400 },
+      { q: "This South African activist served 27 years in prison before becoming the country's first Black president in 1994.", a: "Nelson Mandela", points: 500 },
+      { q: "This American president issued the Emancipation Proclamation and led the Union through the Civil War.", a: "Abraham Lincoln", points: 600 },
+      { q: "The French Revolution began in this year.", a: "1789", points: 700 },
+      { q: "This empire was the largest in history by land area.", a: "British Empire", points: 800 },
+      { q: "This 14th-century pandemic, also known as the Black Death, killed an estimated 30% to 60% of Europe's population.", a: "The Plague", points: 900 },
+      { q: "This 1989 event marked the symbolic end of the Cold War and the beginning of the reunification of Germany.", a: "The Fall of the Berlin Wall", points: 1000 },
+    ]
+  },
+  {
+    category: "POP CULTURE",
+    questions: [
+      { q: "This superhero is also known as the Man of Steel.", a: "Superman", points: 100 },
+      { q: "The Mona Lisa was painted by this artist.", a: "Leonardo da Vinci", points: 200 },
+      { q: "This boy wizard attends Hogwarts School of Witchcraft and Wizardry.", a: "Harry Potter", points: 300 },
+      { q: "This pop star is known as the Queen of Pop.", a: "Madonna", points: 400 },
+      { q: "This annual fashion event in New York City is often called fashion's biggest night out and is held at the Metropolitan Museum of Art.", a: "The Met Gala", points: 500 },
+      { q: "This yellow, four-fingered family from Springfield holds the record for the longest-running American animated series.", a: "The Simpsons", points: 600 },
+      { q: "This video game character is a plumber who rescues Princess Peach.", a: "Mario", points: 700 },
+      { q: "The Oscars are formally known by this name.", a: "Academy Awards", points: 800 },
+      { q: "This fictional world, created by George R.R. Martin, was the setting for the hit HBO series Game of Thrones.", a: "Westeros", points: 900 },
+      { q: "This animated film features a robot left alone on Earth to clean up garbage.", a: "WALL-E", points: 1000 },
+    ]
+  },
+  {
+    category: "SPORTS",
+    questions: [
+      { q: "In American football, this is the name of the game's championship, famously played every February.", a: "The Super Bowl", points: 100 },
+      { q: "In basketball, a shot made from behind the large arc on the court is worth this many points.", a: "3", points: 200 },
+      { q: "This country has won the most Olympic gold medals in history.", a: "United States", points: 300 },
+      { q: "This is the only country to have appeared in every single FIFA World Cup tournament since its inception in 1930.", a: "Brazil", points: 400 },
+      { q: "This basketball player is known as 'The Black Mamba'.", a: "Kobe Bryant", points: 500 },
+      { q: "The Tour de France is a race involving this sport.", a: "Cycling", points: 600 },
+      { q: "This city hosted the first modern Olympic Games in 1896.", a: "Athens", points: 700 },
+      { q: "This German club is the only one in Bundesliga history to win the league title without losing a single match.", a: "Bayer Leverkusen", points: 800 },
+      { q: "Which two Formula 1 drivers are widely regarded as among the greatest of all time, with 7 world championships and record-breaking careers—one dominating the early 2000s with Ferrari, and the other excelling in the hybrid era with Mercedes?", a: "Lewis Hammilton and Michael Schumacher", points: 900 },
+      { q: "This is the only goalkeeper in history to have won the Ballon d'Or (awarded in 1963).", a: "Lev Yashin", points: 1000 },
+    ]
+  },
+  {
+    category: "FOOD & DRINK",
+    questions: [
+      { q: "This Italian dish is made of dough with tomato sauce and cheese.", a: "Pizza", points: 100 },
+      { q: "Sushi originated in this country.", a: "Japan", points: 200 },
+      { q: "This popular drink is made from fermented grape juice.", a: "Wine", points: 300 },
+      { q: "This South American country is the world's largest producer of coffee.", a: "Brazil", points: 400 },
+      { q: "This type of pasta, whose name means little worms in Italian, is slightly thicker than spaghetti.", a: "Vermicelli", points: 500 },
+      { q: "This popular breakfast item is made from a leavened batter or dough cooked between two plates that are patterned to give a characteristic size, shape, and surface impression.", a: "Waffle", points: 600 },
+      { q: "This traditional Italian method of making coffee involves forcing a small amount of nearly boiling water under pressure through finely-ground beans.", a: "Espresso", points: 700 },
+      { q: "This fruit, often mistaken for a vegetable, is the main ingredient in the traditional Greek dish Moussaka.", a: "Eggplant (Aubergine)", points: 800 },
+      { q: "This is the primary protein found in wheat that gives bread dough its elasticity and chewiness.", a: "Gluten", points: 900 },
+      { q: "This is the name for a thick, cold beverage made from blended fruit, often with a base of yogurt, milk, or ice.", a: "Smoothie", points: 1000 },
+    ]
+  }
+];
+
+// ============================================================
+//  TEAM NAMES — Edit team names here!
+// ============================================================
+const TEAMS = [
+  { name: "Sueda", cls: "t1" },
+  { name: "Zoktay",  cls: "t2" },
+  { name: "Lidya", cls: "t3" },
+  { name: "Gragas", cls: "t4" },
+];
+
+// ============================================================
+//  GAME STATE
+// ============================================================
+let scores = [0, 0, 0, 0];
+let usedCells = 0;
+const TOTAL = 60;
+let timerInterval = null;
+let timerLeft = 30;
+let currentPoints = 0;
+let currentCell = null;
+
+// DOM refs
+const board       = document.getElementById('board');
+const scoreboard  = document.getElementById('scoreboard');
+const overlay     = document.getElementById('modal-overlay');
+const timerFg     = document.getElementById('timer-fg');
+const timerText   = document.getElementById('timer-text');
+const awardSection = document.getElementById('award-section');
+const answerReveal = document.getElementById('answer-reveal');
+const answerText  = document.getElementById('answer-text');
+const progressInfo = document.getElementById('progress-info');
+const progressFill = document.getElementById('progress-fill');
+const CIRC = 2 * Math.PI * 38; // circumference
+
+// ============================================================
+//  BUILD BOARD
+// ============================================================
+function buildBoard() {
+  board.innerHTML = '';
+  // Headers
+  GAME_DATA.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'category-header';
+    h.textContent = cat.category;
+    board.appendChild(h);
+  });
+  // Cells row by row (10 rows, 6 cols)
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 6; col++) {
+      const q = GAME_DATA[col].questions[row];
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerHTML = `<span class="cell-value">$${q.points}</span>`;
+      cell.dataset.col = col;
+      cell.dataset.row = row;
+      cell.addEventListener('click', () => openQuestion(col, row, cell));
+      board.appendChild(cell);
+    }
+  }
+}
+
+// ============================================================
+//  SCOREBOARD
+// ============================================================
+function buildScoreboard() {
+  scoreboard.innerHTML = '';
+  const maxScore = Math.max(...scores);
+  TEAMS.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = `team-card ${t.cls}${scores[i] === maxScore && maxScore > 0 ? ' leading' : ''}`;
+    card.id = `team-card-${i}`;
+    card.innerHTML = `<div class="team-name">${t.name}</div><div class="team-score" id="score-${i}">$${scores[i].toLocaleString()}</div>`;
+    scoreboard.appendChild(card);
+  });
+}
+
+function updateScoreboard() {
+  const maxScore = Math.max(...scores);
+  TEAMS.forEach((t, i) => {
+    document.getElementById(`score-${i}`).textContent = `$${scores[i].toLocaleString()}`;
+    const card = document.getElementById(`team-card-${i}`);
+    if (scores[i] === maxScore && maxScore > 0) card.classList.add('leading');
+    else card.classList.remove('leading');
+  });
+}
+
+// ============================================================
+//  QUESTION MODAL
+// ============================================================
+function openQuestion(col, row, cell) {
+  if (cell.classList.contains('used')) return;
+  const q = GAME_DATA[col].questions[row];
+  currentPoints = q.points;
+  currentCell = cell;
+
+  document.getElementById('modal-category').textContent = GAME_DATA[col].category;
+  document.getElementById('modal-points').textContent = `$${q.points}`;
+  document.getElementById('modal-question').textContent = q.q;
+  answerText.textContent = q.a;
+
+  answerReveal.classList.remove('visible');
+  awardSection.classList.remove('visible');
+  document.getElementById('btn-show-answer').style.display = '';
+
+  overlay.classList.add('active');
+  startTimer();
+}
+
+function closeModal() {
+  overlay.classList.remove('active');
+  clearInterval(timerInterval);
+  timerInterval = null;
+  if (currentCell && !currentCell.classList.contains('used')) {
+    markCellUsed(currentCell);
+  }
+}
+
+function markCellUsed(cell) {
+  cell.classList.add('used');
+  usedCells++;
+  updateProgress();
+  if (usedCells >= TOTAL) setTimeout(showWinScreen, 600);
+}
+
+function updateProgress() {
+  progressInfo.textContent = `${usedCells} / ${TOTAL} QUESTIONS ANSWERED`;
+  progressFill.style.width = `${(usedCells / TOTAL) * 100}%`;
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+function startTimer() {
+  timerLeft = 30;
+  updateTimerUI(30);
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerLeft--;
+    updateTimerUI(timerLeft);
+    if (timerLeft <= 0) {
+      clearInterval(timerInterval);
+      revealAnswer();
+    }
+  }, 1000);
+}
+
+function updateTimerUI(t) {
+  timerText.textContent = t;
+  const fraction = t / 30;
+  timerFg.style.strokeDashoffset = CIRC * (1 - fraction);
+  if (t <= 5)       timerFg.style.stroke = '#e93a06';
+  else if (t <= 10) timerFg.style.stroke = '#ffa500';
+  else              timerFg.style.stroke = 'var(--gold)';
+}
+
+// ============================================================
+//  ANSWER
+// ============================================================
+function revealAnswer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('btn-show-answer').style.display = 'none';
+  answerReveal.classList.add('visible');
+
+  // Build award buttons
+  const awardButtons = document.getElementById('award-buttons');
+  awardButtons.innerHTML = '';
+  TEAMS.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = `award-btn ${t.cls}`;
+    btn.textContent = t.name;
+    btn.onclick = () => awardPoints(i);
+    awardButtons.appendChild(btn);
+  });
+
+  // Skip button
+  const skip = document.createElement('button');
+  skip.className = 'btn btn-red';
+  skip.style.cssText = 'font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:2px;padding:9px 18px;border-radius:8px;cursor:pointer;transition:all 0.2s;';
+  skip.textContent = 'No One Got It';
+  skip.onclick = () => { closeModal(); };
+  awardButtons.appendChild(skip);
+
+  awardSection.classList.add('visible');
+}
+
+function awardPoints(teamIndex) {
+  scores[teamIndex] += currentPoints;
+  updateScoreboard();
+  overlay.classList.remove('active');
+  if (currentCell) markCellUsed(currentCell);
+}
+
+// ============================================================
+//  WIN SCREEN & CONFETTI
+// ============================================================
+function showWinScreen() {
+  const maxScore = Math.max(...scores);
+  const winners = TEAMS.filter((_, i) => scores[i] === maxScore);
+
+  document.getElementById('win-team').textContent = winners.map(w => w.name).join(' & ');
+
+  const scoresDiv = document.getElementById('win-scores');
+  scoresDiv.innerHTML = '';
+  TEAMS.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = `win-score-card${scores[i] === maxScore ? ' winner' : ''}`;
+    card.innerHTML = `<div class="t-name" style="color:var(--${t.cls})">${t.name}</div><div class="t-pts">$${scores[i].toLocaleString()}</div>`;
+    scoresDiv.appendChild(card);
+  });
+
+  document.getElementById('win-screen').classList.add('active');
+  startConfetti();
+}
+
+function restartGame() {
+  scores = [0, 0, 0, 0];
+  usedCells = 0;
+  currentCell = null;
+  document.getElementById('win-screen').classList.remove('active');
+  stopConfetti();
+  buildBoard();
+  buildScoreboard();
+  updateProgress();
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let confettiRunning = false;
+let rafId = null;
+
+function startConfetti() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  particles = Array.from({ length: 200 }, () => createParticle());
+  confettiRunning = true;
+  animateConfetti();
+}
+
+function stopConfetti() {
+  confettiRunning = false;
+  cancelAnimationFrame(rafId);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = [];
+}
+
+function createParticle() {
+  const colors = ['#FFD700','#FF6B35','#7B2FBE','#00B4D8','#06D6A0','#FF4081','#fff'];
+  return {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height - canvas.height,
+    w: Math.random() * 12 + 4,
+    h: Math.random() * 6 + 2,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vy: Math.random() * 4 + 2,
+    vx: (Math.random() - 0.5) * 2,
+    rot: Math.random() * 360,
+    rotSpeed: (Math.random() - 0.5) * 6,
+  };
+}
+
+function animateConfetti() {
+  if (!confettiRunning) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.y += p.vy;
+    p.x += p.vx;
+    p.rot += p.rotSpeed;
+    if (p.y > canvas.height) {
+      p.y = -20;
+      p.x = Math.random() * canvas.width;
+    }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot * Math.PI / 180);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    ctx.restore();
+  });
+  rafId = requestAnimationFrame(animateConfetti);
+}
+
+window.addEventListener('resize', () => {
+  if (confettiRunning) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+});
+
+// ============================================================
+//  INIT
+// ============================================================
+buildBoard();
+buildScoreboard();
+</script>
+</body>
+</html>
